@@ -35,12 +35,14 @@ def write_prog_makefile():
     write_var(mf, "SOURCES", list_src)
     write_var(mf, "OBJ", "$(SOURCES:.c=.o)")
     write_rule(mf, "all", "$(NAME)")
-    write_rule(mf, "%.o", "%.c $(HEADERS)", ["$(CC) $(CFLAGS) -I$(HEADERS) -c -o $@ $<"])
-    #if pro_type == "lib":
-    #	write_rule(mf, "$(NAME)", "$(OBJ)", ["ar rcs $(NAME) $(OBJ)"])
-    #        write_rule(mf, "so", "$(OBJ)", ["$(CC) -fPIC $(CFLAGS) $(SOURCES) -shared -I$(HEADERS)"])
-    #elif pro_type == "prog":
-    write_rule(mf, "$(NAME)", "$(OBJ)", ["$(CC) $(CFLAGS) -I$(HEADERS) -o $(NAME) $(OBJ) $(LIBS)"])
+    if os.path.exists("./libft"):
+        write_rule(mf, "%.o", "%.c $(HEADERS)", ["$(CC) $(CFLAGS) -I$(HEADERS) -I./libft/includes -c -o $@ $<"])
+        write_rule(mf, "$(NAME)", "$(OBJ)", [
+            "make -C libft/",
+            "$(CC) $(CFLAGS) -I$(HEADERS) -o $(NAME) $(OBJ) ./libft/libft.a"])
+    else:
+        write_rule(mf, "%.o", "%.c $(HEADERS)", ["$(CC) $(CFLAGS) -I$(HEADERS) -c -o $@ $<"])
+        write_rule(mf, "$(NAME)", "$(OBJ)", ["$(CC) $(CFLAGS) -I$(HEADERS) -o $(NAME) $(OBJ)"])
     write_rule(mf, "clean", "", ["rm -f $(OBJ)"])
     write_rule(mf, "fclean", "clean" , ["rm -f $(NAME)"])
     write_rule(mf, "re", "fclean all")
