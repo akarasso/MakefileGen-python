@@ -2,6 +2,13 @@
 
 import os
 
+def get_root_folder(path):
+    list_dir = path.split("/")
+    if len(list_dir) == 1:
+        return list_dir[0]
+    else:
+        return list_dir[1]
+
 def tr_column(objs, l):
 	ret = ""
 	larg = 0
@@ -30,16 +37,16 @@ def get_max_length(objs):
 	m = m + 8 - m % 8
 	return m
 
-def retrive_list(path, extension):
+def retrieve_filelist(path, extension):
 	ret = []
 	larg = 0
 	for root, directories, filenames in os.walk(path):
 		for filename in filenames:
-			if filename.endswith(extension):
+			if filename.endswith(extension) and not get_root_folder(root) == "libft":
 				ret.append(root + "/" + filename)
 	larg = get_max_length(ret)
 	return list_columns(ret, larg)
 
 
 if __name__ == "__main__":
-	print(retrive_list(".", ".c"))
+	print(retrieve_filelist(".", ".c"))

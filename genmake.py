@@ -1,8 +1,8 @@
 #!/usr/bin/python
 
 import os
-from arrange import *
-from retrive import *
+from retrieve import *
+from init import *
 
 def write_var(fd, key, value):
 	fd.write("{}	= {}\n\n".format(key, value))
@@ -13,59 +13,62 @@ def write_rule(fd, key, dep="", value=[]):
 		fd.write("\t{}\n".format(v))
 	fd.write("\n")
 
-pro_type = ""
-pro_name = ""
+def get_option(msg, opt1 = "", opt2 = "", default = ""):
+    r = ""
+    if opt1 == "" and opt2 == "":
+        r = raw_input("{}:".format(msg, opt1.upper()))
+        r = r or default
+    else:
+        while not(r == opt1 or r == opt2):
+            r = raw_input("{}:({}/{})".format(msg, opt1.upper(), opt2))
+            r = r or default
+    return r
 
-while not(pro_type == "prog" or pro_type == "lib"):
-	pro_type = raw_input("Type de projet:(PROG/lib)")
-	pro_type = pro_type or "prog"
-while pro_name == "":
-	pro_name = raw_input("Nom du projet: ")
-	pro_name = pro_name or ""
-
-if pro_type == "prog":
-	if create_prog_dir(["srcs", "libs", "includes"]) == 0:
-		is_good_arrange(".", ["includes", "srcs", "libs"])
-elif pro_type == "lib":
-	if create_prog_dir(["srcs", "includes"]) == 0:
-		is_good_arrange(".", ["includes", "srcs"], [pro_name])
-mf = open("Makefile", "w")
-
-list_h = retrive_list(".", ".h")
-list_h = tr_str(list_h)
-list_src = retrive_list(".", ".c")
-list_src = tr_str(list_src)
-list_libs = retrive_list(".", ".a")
-
-write_var(mf, "CC", "gcc")
-write_var(mf, "CFLAGS", "-Wall -Werror -Wextra")
-write_var(mf, "NAME", pro_name)
-if len(list_h) > 0:
-	write_var(mf, "HEADERS", list_h)
-	write_var(mf, "HEADERFLAGS", "$(addprefix -I, $(dir $(HEADERS)))")
-else:
+def write_prog_makefile():
+    pro_name = get_option("Nom du projet", "", "", "noname")
+    mf = open("Makefile", "w")
+    list_src = tr_str(retrieve_filelist(".", ".c"))
+    write_var(mf, "CC", "gcc")
+    write_var(mf, "CFLAGS", "-Wall -Werror -Wextra")
+    write_var(mf, "NAME", pro_name)
     write_var(mf, "HEADERS", "./includes")
-if pro_type == "prog":
-	write_var(mf, "LIBS", tr_str(list_libs))
-else:
-    if len(list_libs) > 0:
-        if pro_name in list_libs:
-		list_libs.remove(pro_name)
-	write_var(mf, "LIBS", tr_str(list_libs))
-write_var(mf, "SOURCES", list_src)
-write_var(mf, "OBJ", "$(SOURCES:.c=.o)")
-write_rule(mf, "all", "$(NAME)")
-if len(list_h) > 0:
-	write_rule(mf, "%.o", "%.c $(HEADERS)", ["$(CC) $(CFLAGS) $(HEADERFLAGS) -c -o $@ $<"])
-else:
-	write_rule(mf, "%.o", "%.c $(HEADERS)", ["$(CC) $(CFLAGS) -I$(HEADERS) -c -o $@ $<"])
-if pro_type == "lib":
-	write_rule(mf, "$(NAME)", "$(OBJ)", ["ar rcs $(NAME) $(OBJ)"])
-elif pro_type == "prog":
-	if len(list_h) > 0:
-		write_rule(mf, "$(NAME)", "$(OBJ)", ["$(CC) $(CFLAGS) -o $(NAME) $(OBJ) $(LIBS)"])
-	else:
-		write_rule(mf, "$(NAME)", "$(OBJ)", ["$(CC) $(CFLAGS) $(HEADERFLAGS) -o $(NAME) $(OBJ) $(LIBS)"])
-write_rule(mf, "clean", "", ["rm -f $(OBJ)"])
-write_rule(mf, "fclean", "clean" , ["rm -f $(NAME)"])
-write_rule(mf, "re", "fclean all")
+    write_var(mf, "SOURCES", list_src)
+    write_var(mf, "OBJ", "$(SOURCES:.c=.o)")
+    write_rule(mf, "all", "$(NAME)")
+    write_rule(mf, "%.o", "%.c $(HEADERS)", ["$(CC) $(CFLAGS) -I$(HEADERS) -c -o $@ $<"])
+    #if pro_type == "lib":
+    #	write_rule(mf, "$(NAME)", "$(OBJ)", ["ar rcs $(NAME) $(OBJ)"])
+    #        write_rule(mf, "so", "$(OBJ)", ["$(CC) -fPIC $(CFLAGS) $(SOURCES) -shared -I$(HEADERS)"])
+    #elif pro_type == "prog":
+    write_rule(mf, "$(NAME)", "$(OBJ)", ["$(CC) $(CFLAGS) -I$(HEADERS) -o $(NAME) $(OBJ) $(LIBS)"])
+    write_rule(mf, "clean", "", ["rm -f $(OBJ)"])
+    write_rule(mf, "fclean", "clean" , ["rm -f $(NAME)"])
+    write_rule(mf, "re", "fclean all")
+
+def write_lib_makefile():
+    pro_name = get_option("Nom de la lib", "", "", "noname")
+    mf = open("Makefile", "w")
+    list_src = tr_str(retrieve_filelist(".", ".c"))
+    write_var(mf, "CC", "gcc")
+    write_var(mf, "CFLAGS", "-Wall -Werror -Wextra")
+    write_var(mf, "NAME", pro_name)
+    write_var(mf, "HEADERS", "./includes")
+    write_var(mf, "SOURCES", list_src)
+    write_var(mf, "OBJ", "$(SOURCES:.c=.o)")
+    write_rule(mf, "all", "$(NAME)")
+    write_rule(mf, "%.o", "%.c $(HEADERS)", ["$(CC) $(CFLAGS) -I$(HEADERS) -c -o $@ $<"])
+    write_rule(mf, "$(NAME)", "$(OBJ)", ["ar rcs $(NAME) $(OBJ)"])
+    write_rule(mf, "so", "$(OBJ)", ["$(CC) -fPIC $(CFLAGS) $(SOURCES) -shared -I$(HEADERS)"])
+    write_rule(mf, "clean", "", ["rm -f $(OBJ)"])
+    write_rule(mf, "fclean", "clean" , ["rm -f $(NAME)"])
+    write_rule(mf, "re", "fclean all")
+
+def request():
+    t = get_option("Type de contenu", "prog", "lib", "prog")
+    if t == "prog":
+        write_prog_makefile()
+    else:
+        write_lib_makefile()
+
+if __name__ == "__main__":
+    request()
