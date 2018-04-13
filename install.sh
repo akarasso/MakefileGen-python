@@ -1,6 +1,8 @@
 #!/bin/bash
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-cp -R $DIR ~/.genmake
+rm -rf ~/.genmake
+mkdir ~/.genmake
+cp -R *.py ~/.genmake
 if [ -f ~/.zshrc ]
 then
 	if grep -q "alias genmake" ~/.zshrc
@@ -22,7 +24,7 @@ if [ -f ~/.bashrc ]
 then
         if grep -q "alias genmake" ~/.bashrc
         then
-                echo "Already install on bashrc"
+                echo "Genmake already install on bashrc"
         else
                 echo "Install genmake on bashrc.."
                 echo "alias genmake='~/.genmake/genmake.py'" >> ~/.bashrc
