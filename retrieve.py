@@ -48,5 +48,12 @@ def retrieve_filelist(path, extension):
 	return list_columns(ret, larg)
 
 
+def get_dirlist(rootdir):
+    l = []
+    for root, directories, filenames in os.walk(rootdir):
+        for filename in directories:
+            l.append(filename)
+    return l
+
 if __name__ == "__main__":
-	print(retrieve_filelist(".", ".c"))
+    print(get_dirlist('/Users/akarasso/gnl'))
