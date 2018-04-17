@@ -41,7 +41,7 @@ def write_prog_makefile():
     write_var(mf, "HEADER_LIST", "$(addprefix -I,$(HEADERS))")
     write_rule(mf, "all", "$(NAME)")
     if os.path.exists("./libft"):
-        write_rule(mf, "%.o", "%.c $(HEADERS)", ["$(CC) $(CFLAGS) $(HEADER_LIST) -c -o $@ $<"])
+        write_rule(mf, "%.o", "%.c", ["$(CC) $(CFLAGS) $(HEADER_LIST) -c -o $@ $<"])
         write_rule(mf, "$(NAME)", "$(OBJ)", [
             "make -C libft/",
             "$(CC) $(CFLAGS) $(HEADER_LIST) -o $(NAME) $(OBJ) ./libft/libft.a"])
