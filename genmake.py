@@ -41,13 +41,16 @@ def write_prog_makefile():
     write_var(mf, "HEADER_LIST", "$(addprefix -I,$(HEADERS))")
     write_rule(mf, "all", "$(NAME)")
     if os.path.exists("./libft"):
+        write_rule(mf, "makelib", "", ["make -C libft/"])
+        write_rule(mf, "cleanlib", "", ["make clean -C libft/"])
+        write_rule(mf, "fcleanlib", "", ["make fclean -C libft/"])
         write_rule(mf, "%.o", "%.c $(HEADERS)", ["$(CC) $(CFLAGS) $(HEADER_LIST) -c -o $@ $<"])
         write_rule(mf, "$(NAME)", "$(OBJ)", [
             "make -C libft/",
             "$(CC) $(CFLAGS) $(HEADER_LIST) -o $(NAME) $(OBJ) ./libft/libft.a"])
-        write_rule(mf, "clean", "", ["make clean -C libft/", "rm -f $(OBJ)"])
-        write_rule(mf, "re", "fclean all")
-        write_rule(mf, "fclean", "clean" , ["make fclean -C libft/", "rm -f $(NAME)"])
+        write_rule(mf, "clean", "cleanlib", ["rm -f $(OBJ)"])
+        write_rule(mf, "re", "fcleanlib fclean all")
+        write_rule(mf, "fclean", "cleanlib clean" , ["rm -f $(NAME)"])
     else:
         write_rule(mf, "%.o", "%.c $(HEADERS)", ["$(CC) $(CFLAGS) $(HEADER_LIST) -c -o $@ $<"])
         write_rule(mf, "$(NAME)", "$(OBJ)", ["$(CC) $(CFLAGS) $(HEADER_LIST) -o $(NAME) $(OBJ)"])
